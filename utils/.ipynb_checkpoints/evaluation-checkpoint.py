@@ -1,5 +1,7 @@
 import numpy as np
 from statistics import mean
+import albumentations as A
+import cv2
 
 class Evaluate():
     def __init__(self, predictions):
@@ -57,7 +59,20 @@ class Evaluate():
         #returns both iou and f1 score in a dictionary
         IoUs = []
         F1s = []
-        for pred, target, _, _ in self.predictions:
+        #the evaluation must be carried out on the full size images
+        for pred, target, h, w in self.predictions:
+            pred = A.resize(
+                pred, 
+                height=h, 
+                width=w, 
+                interpolation=cv2.INTER_NEAREST
+            )
+            target = A.resize(
+                target, 
+                height=h, 
+                width=w, 
+                interpolation=cv2.INTER_NEAREST
+            )
             iou = self.jaccard(pred, target)
             f1 = self.dice(pred, target)
             IoUs.append(iou)
