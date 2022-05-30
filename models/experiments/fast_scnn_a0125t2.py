@@ -24,20 +24,20 @@ class LearningToDownSample(nn.Module):
     def __init__(self, in_channels):
         super().__init__()
 
-        self.conv = ConvBlock(in_channels=in_channels, out_channels=32, stride=2)
+        self.conv = ConvBlock(in_channels=in_channels, out_channels=4, stride=2)
         self.dsconv1 = nn.Sequential(
             # depthwise convolution
-            nn.Conv2d(32, 32, kernel_size=3, stride=2, padding=1, dilation=1, groups=32, bias=False),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(4, 4, kernel_size=3, stride=2, padding=1, dilation=1, groups=4, bias=False),
+            nn.BatchNorm2d(4),
             # pointwise convolution
-            nn.Conv2d(32, 48, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
-            nn.BatchNorm2d(48),
+            nn.Conv2d(4, 6, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.BatchNorm2d(6),
             nn.ReLU(inplace=True))
         self.dsconv2 = nn.Sequential(
-            nn.Conv2d(48, 48, kernel_size=3, stride=2, padding=1, dilation=1, groups=48, bias=False),
-            nn.BatchNorm2d(48),
-            nn.Conv2d(48, 64, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
-            nn.BatchNorm2d(64),
+            nn.Conv2d(6, 6, kernel_size=3, stride=2, padding=1, dilation=1, groups=6, bias=False),
+            nn.BatchNorm2d(6),
+            nn.Conv2d(6, 8, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.BatchNorm2d(8),
             nn.ReLU(inplace=True))
 
     def forward(self, x):
@@ -51,16 +51,16 @@ class GlobalFeatureExtractor(nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.first_block = nn.Sequential(Bottleneck(64, 64, 2, 6),
-                                         Bottleneck(64, 64, 1, 6),
-                                         Bottleneck(64, 64, 1, 6))
-        self.second_block = nn.Sequential(Bottleneck(64, 96, 2, 6),
-                                          Bottleneck(96, 96, 1, 6),
-                                          Bottleneck(96, 96, 1, 6))
-        self.third_block = nn.Sequential(Bottleneck(96, 128, 1, 6),
-                                         Bottleneck(128, 128, 1, 6),
-                                         Bottleneck(128, 128, 1, 6))
-        self.ppm = PPMModule(128, 128)
+        self.first_block = nn.Sequential(Bottleneck(8, 8, 2, 2),
+                                         Bottleneck(8, 8, 1, 2),
+                                         Bottleneck(8, 8, 1, 2))
+        self.second_block = nn.Sequential(Bottleneck(8, 12, 2, 2),
+                                          Bottleneck(12, 12, 1, 2),
+                                          Bottleneck(12, 12, 1, 2))
+        self.third_block = nn.Sequential(Bottleneck(12, 16, 1, 2),
+                                         Bottleneck(16, 16, 1, 2),
+                                         Bottleneck(16, 16, 1, 2))
+        self.ppm = PPMModule(16, 16)
 
     def forward(self, x):
         x = self.first_block(x)
@@ -75,11 +75,11 @@ class FeatureFusion(nn.Module):
         super().__init__()
 
         self.scale_factor = scale_factor
-        self.conv_high_res = nn.Conv2d(64, 128, kernel_size=1, stride=1, padding=0, bias=True)
+        self.conv_high_res = nn.Conv2d(8, 16, kernel_size=1, stride=1, padding=0, bias=True)
 
-        self.dwconv = ConvBlock(in_channels=128, out_channels=128, stride=1, padding=scale_factor,
-                                dilation=scale_factor, groups=128)
-        self.conv_low_res = nn.Conv2d(128, 128, kernel_size=1, stride=1, padding=0, bias=True)
+        self.dwconv = ConvBlock(in_channels=16, out_channels=16, stride=1, padding=scale_factor,
+                                dilation=scale_factor, groups=16)
+        self.conv_low_res = nn.Conv2d(16, 16, kernel_size=1, stride=1, padding=0, bias=True)
         self.relu = nn.ReLU(inplace=True)
 
     def forward(self, high_res_input, low_res_input):
@@ -100,20 +100,20 @@ class Classifier(nn.Module):
         self.scale_factor = scale_factor
         self.dsconv1 = nn.Sequential(
             # depthwise convolution
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, dilation=1, groups=128, bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1, dilation=1, groups=16, bias=False),
+            nn.BatchNorm2d(16),
             # pointwise convolution
-            nn.Conv2d(128, 128, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(16, 16, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.BatchNorm2d(16),
             nn.ReLU(inplace=True))
         self.dsconv2 = nn.Sequential(
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, dilation=1, groups=128, bias=False),
-            nn.BatchNorm2d(128),
-            nn.Conv2d(128, 128, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(16, 16, kernel_size=3, stride=1, padding=1, dilation=1, groups=16, bias=False),
+            nn.BatchNorm2d(16),
+            nn.Conv2d(16, 16, kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.BatchNorm2d(16),
             nn.ReLU(inplace=True))
         self.drop_out = nn.Dropout(p=0.1)
-        self.conv = nn.Conv2d(128, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
+        self.conv = nn.Conv2d(16, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
 
     def forward(self, x):
         x = self.dsconv1(x)
@@ -182,10 +182,10 @@ class PPMModule(nn.Module):
         self.inter_channels = in_channels // 4
         assert in_channels % 4 == 0
         
-        self.pool1 = nn.AvgPool2d(16)    # produces 1x1x128 feature map
-        self.pool2 = nn.AvgPool2d(8)     # produces 2x2x128 feature map
-        self.pool3 = nn.AvgPool2d(4)     # produces 4x4x128 feature map
-        self.pool4 = nn.AvgPool2d(2)     # produces 8x8x128 feature map
+        self.pool1 = nn.AvgPool2d(16)    # produces 1x1x16 feature map
+        self.pool2 = nn.AvgPool2d(8)     # produces 2x2x16 feature map
+        self.pool3 = nn.AvgPool2d(4)     # produces 4x4x16 feature map
+        self.pool4 = nn.AvgPool2d(2)     # produces 8x8x16 feature map
         
         self.conv = nn.Sequential(
             nn.Conv2d(in_channels, self.inter_channels, kernel_size=1, stride=1, padding=0,
