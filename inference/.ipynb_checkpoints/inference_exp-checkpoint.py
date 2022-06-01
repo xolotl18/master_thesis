@@ -26,7 +26,9 @@ mt_dir = os.path.dirname(c_dir)
 models_path = os.path.join(mt_dir, "models")
 sys.path.insert(1, models_path)
 
-
+parser = argparse.ArgumentParser()
+parser.add_argument('--stage', type=str, required=True)
+args = parser.parse_args()
 
 batch_size = 1
 num_workers = 1
@@ -84,8 +86,9 @@ test_dataset = PackagesInferenceDataset(
     masks_directory=test_label_path, 
     transform=test_transform
 )
-
-ckpt_path = os.path.join(mt_dir, "model_checkpoints/experiments/onnx")
+stage="stage_"+args.stage
+exp_path = os.path.join(mt_dir, "model_checkpoints/experiments")
+ckpt_path = os.path.join(exp_path, stage)
 model_names = os.listdir(ckpt_path)
 model_names.sort(reverse=True)
 #load onnx model
