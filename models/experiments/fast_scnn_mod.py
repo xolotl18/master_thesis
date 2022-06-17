@@ -4,7 +4,7 @@ from torch.nn import functional as F
 
 
 class FastSCNN(nn.Module):
-    def __init__(self, in_channels, num_classes, a=1, t=6, r=3, pp=True):
+    def __init__(self, in_channels, num_classes, a=1, t=6, r=3, pp=True, verbose=True):
         super().__init__()
         if r == 1 or r == 2 or r == 3:
             r = r
@@ -15,11 +15,12 @@ class FastSCNN(nn.Module):
         self.global_feature_extractor = GlobalFeatureExtractor(a, t, r, pp)
         self.feature_fusion = FeatureFusion(a, scale_factor=4)
         self.classifier = Classifier(num_classes, a, scale_factor=8)
-        print("The model has been initialized with parameters:")
-        print("\t Width multiplier a = ", a)
-        print("\t Bottleneck expansion rate t = ", t)
-        print("\t Bottleneck block repetition r = ", r)
-        print("\t Presence of Pyramid Pooling module pp = ", pp)
+        if verbose:
+            print("The model has been initialized with parameters:")
+            print("\t Width multiplier a = ", a)
+            print("\t Bottleneck expansion rate t = ", t)
+            print("\t Bottleneck block repetition r = ", r)
+            print("\t Presence of Pyramid Pooling module pp = ", pp)
 
     def forward(self, x):
         shared = self.learning_to_down_sample(x)
