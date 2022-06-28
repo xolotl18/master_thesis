@@ -16,8 +16,8 @@ def createDeepLabv3(outputchannels=1, version="resnet"):
     if version == "resnet":
         model = models.segmentation.deeplabv3_resnet50(pretrained=True, progress=True)
         model.aux_classifier=None
-        for par in model.parameters():
-            par.requires_grad = False
+        #for par in model.parameters():
+        #    par.requires_grad = False
         
         model.classifier = DeepLabHead(2048, outputchannels)
     else:
