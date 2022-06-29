@@ -23,8 +23,8 @@ def createDeepLabv3(outputchannels=1, version="resnet"):
     else:
         model = models.segmentation.deeplabv3_mobilenet_v3_large(pretrained=True, progress=True)
         model.aux_classifier=None
-        for par in model.parameters():
-            par.requires_grad = False
+        #for par in model.parameters():
+        #    par.requires_grad = False
         
         model.classifier = DeepLabHead(960, outputchannels)
     
